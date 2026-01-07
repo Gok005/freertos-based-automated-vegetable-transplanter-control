@@ -4,6 +4,8 @@
  */
 
 #include "pickup_task.h"
+#include "sequencer.h"
+
 
 /* RTOS objects */
 TaskHandle_t PickupTaskHandle = NULL;
