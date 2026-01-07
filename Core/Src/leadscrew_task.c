@@ -63,3 +63,21 @@ void Leadscrew_ReverseDirection(void)
     leadscrewReverseRequested = 1;
     xTaskNotifyGive(LeadscrewTaskHandle);
 }
+
+if (leadscrewReverseRequested)
+{
+    /* TODO: Reverse motor direction */
+    leadscrewReverseRequested = 0;
+    currentState = LEADSCREW_DIRECTION_CHANGE;
+
+    xEventGroupSetBits(SystemEventGroup, EVT_LEADSCREW_DONE);
+}
+
+if (leadscrewRunRequested)
+{
+    /* TODO: Start leadscrew motion */
+    leadscrewRunRequested = 0;
+
+    xEventGroupSetBits(SystemEventGroup, EVT_LEADSCREW_DONE);
+}
+
