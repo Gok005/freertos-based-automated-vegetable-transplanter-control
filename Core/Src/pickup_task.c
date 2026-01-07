@@ -51,3 +51,21 @@ void Pickup_RequestBackward(void)
     pickupBackwardRequested = 1;
     xTaskNotifyGive(PickupTaskHandle);
 }
+
+if (pickupForwardRequested)
+{
+    /* TODO: Drive pickup arm forward */
+    pickupForwardRequested = 0;
+    currentState = PICKUP_FORWARD;
+
+    xEventGroupSetBits(SystemEventGroup, EVT_PICKUP_DONE);
+}
+
+if (pickupBackwardRequested)
+{
+    /* TODO: Drive pickup arm backward */
+    pickupBackwardRequested = 0;
+    currentState = PICKUP_RETRACT;
+
+    xEventGroupSetBits(SystemEventGroup, EVT_PICKUP_DONE);
+}
