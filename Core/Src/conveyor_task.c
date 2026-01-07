@@ -4,6 +4,8 @@
  */
 
 #include "conveyor_task.h"
+#include "sequencer.h"
+
 
 /* RTOS objects */
 TaskHandle_t ConveyorTaskHandle = NULL;
@@ -28,6 +30,14 @@ void ConveyorTask(void *argument)
             currentState = CONVEYOR_MOVE;
         }
     }
+}
+if (conveyorMoveRequested)
+{
+    /* TODO: Drive conveyor motor */
+    conveyorMoveRequested = 0;
+    currentState = CONVEYOR_MOVE;
+
+    xEventGroupSetBits(SystemEventGroup, EVT_CONVEYOR_DONE);
 }
 
 /* API used by sequencing logic */
