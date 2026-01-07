@@ -3,8 +3,10 @@
  * @brief FreeRTOS task for pickup arm control
  */
 
-#include "pickup_task.h"
+#include "motor_hal.h"
+#include "motion_profile.h"
 #include "sequencer.h"
+
 
 
 /* RTOS objects */
@@ -19,40 +21,73 @@ static volatile uint8_t pickupBackwardRequested = 0;
 
 void PickupTask(void *argument)
 {
+    TickType_t lastWakeTime;
+
     for (;;)
     {
-        /* Block until a motion request is received */
+        /* Wait for motion command */
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
-        if (pickupForwardRequested)
+        lastWakeTime = xTaskGetTickCount();
+
+        while (motionActive)
         {
-            /* TODO: Drive pickup arm forward */
-            pickupForwardRequested = 0;
-            currentState = PICKUP_FORWARD;
+            /* Generate one step pulse */
+            MotorHAL_GeneratePulse(MOTOR_PICKUP);
+
+            /* Acceleration */
+            if (!stopRequested && currentDelayUs > activeProfile.min_delay_us)
+            {
+                currentDelayUs -= activeProfile.accel_step_us;
+            }
+
+            /* Deceleration */
+            if (stopRequested)
+            {
+                currentDelayUs += activeProfile.accel_step_us;
+                if (currentDelayUs >= activeProfile.start_delay_us)
+                {
+                    motionActive = 0;
+                }
+            }
+
+            vTaskDelayUntil(&lastWakeTime,
+                             pdUS_TO_TICKS(currentDelayUs));
         }
 
-        if (pickupBackwardRequested)
-        {
-            /* TODO: Drive pickup arm backward */
-            pickupBackwardRequested = 0;
-            currentState = PICKUP_RETRACT;
-        }
+        /* Motion complete */
+        xEventGroupSetBits(SystemEventGroup, EVT_PICKUP_DONE);
     }
 }
 
+
 /* API used by other tasks */
 
-void Pickup_RequestForward(void)
+void Pickup_RequestForward(const motion_profile_t *profile)
 {
-    pickupForwardRequested = 1;
+    activeProfile = *profile;
+    currentDelayUs = activeProfile.start_delay_us;
+    motionActive = 1;
+    stopRequested = 0;
+
     xTaskNotifyGive(PickupTaskHandle);
 }
 
-void Pickup_RequestBackward(void)
+void Pickup_RequestBackward(const motion_profile_t *profile)
 {
-    pickupBackwardRequested = 1;
+    activeProfile = *profile;
+    currentDelayUs = activeProfile.start_delay_us;
+    motionActive = 1;
+    stopRequested = 0;
+
     xTaskNotifyGive(PickupTaskHandle);
 }
+
+void Pickup_RequestStop(void)
+{
+    stopRequested = 1;
+}
+
 
 if (pickupForwardRequested)
 {
