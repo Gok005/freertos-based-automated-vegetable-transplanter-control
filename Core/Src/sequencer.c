@@ -23,6 +23,13 @@ motion_profile_t pickupProfile = {
     .accel_step_us  = 50
 };
 
+motion_profile_t leadscrewProfile = {
+    .start_delay_us = 2500,
+    .min_delay_us   = 700,
+    .accel_step_us  = 60
+};
+
+
 
 void SequencerTask(void *argument)
 {
@@ -45,7 +52,7 @@ void SequencerTask(void *argument)
 
         /* 2. Pickup forward + leadscrew start */
         Pickup_RequestForward(&pickupProfile);
-        Leadscrew_RequestStart();
+        Leadscrew_RequestStart(MOTOR_DIR_FORWARD, &leadscrewProfile);
         xEventGroupWaitBits(SystemEventGroup,
                             EVT_PICKUP_DONE | EVT_LEADSCREW_DONE,
                             pdTRUE,
@@ -81,7 +88,7 @@ void SequencerTask(void *argument)
                                 pdTRUE,
                                 portMAX_DELAY);
 
-            Leadscrew_ReverseDirection();
+           Leadscrew_RequestStart(MOTOR_DIR_REVERSE, &leadscrewProfile);
             cycleCount = 0;
         }
     }
