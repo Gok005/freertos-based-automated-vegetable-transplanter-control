@@ -46,6 +46,24 @@ void Servo_RequestClose(void)
     xTaskNotifyGive(ServoTaskHandle);
 }
 
+if (servoCloseRequested)
+{
+    /* TODO: Drive servo to CLOSE position */
+    servoCloseRequested = 0;
+    currentState = SERVO_CLOSE;
+
+    xEventGroupSetBits(SystemEventGroup, EVT_SERVO_DONE);
+}
+
+if (servoOpenRequested)
+{
+    /* TODO: Drive servo to OPEN position */
+    servoOpenRequested = 0;
+    currentState = SERVO_OPEN;
+
+    xEventGroupSetBits(SystemEventGroup, EVT_SERVO_DONE);
+}
+
 void Servo_RequestOpen(void)
 {
     servoOpenRequested = 1;
