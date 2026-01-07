@@ -44,9 +44,8 @@ void SequencerTask(void *argument)
                             portMAX_DELAY);
 
         /* 2. Pickup forward + leadscrew start */
-        Pickup_RequestForward();
+        Pickup_RequestForward(&pickupProfile);
         Leadscrew_RequestStart();
-
         xEventGroupWaitBits(SystemEventGroup,
                             EVT_PICKUP_DONE | EVT_LEADSCREW_DONE,
                             pdTRUE,
@@ -62,7 +61,8 @@ void SequencerTask(void *argument)
                             portMAX_DELAY);
 
         /* 4. Pickup retract (leadscrew idle) */
-        Pickup_RequestBackward();
+        Pickup_RequestStop();
+        Pickup_RequestBackward(&pickupProfile);
         xEventGroupWaitBits(SystemEventGroup,
                             EVT_PICKUP_DONE,
                             pdTRUE,
