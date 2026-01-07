@@ -5,13 +5,24 @@
 
 #include "leadscrew_task.h"
 #include "sequencer.h"
+#include "motor_hal.h"
+#include "motion_profile.h"
+
+
 
 
 /* RTOS objects */
 TaskHandle_t LeadscrewTaskHandle = NULL;
 
 /* Internal state */
-static system_state_t currentState = SYSTEM_INIT;
+static motion_profile_t activeProfile;
+static uint32_t currentDelayUs;
+
+static uint8_t motionActive = 0;
+static uint8_t stopRequested = 0;
+
+static motor_dir_t currentDirection = MOTOR_DIR_FORWARD;
+
 
 /* Control flags */
 static volatile uint8_t leadscrewRunRequested = 0;
@@ -20,44 +31,70 @@ static volatile uint8_t leadscrewReverseRequested = 0;
 
 void LeadscrewTask(void *argument)
 {
+    TickType_t lastWakeTime;
+
     for (;;)
     {
-        /* Block until a control request is received */
+        /* Wait for start command */
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
-        if (leadscrewReverseRequested)
+        /* Apply direction */
+        MotorHAL_Start(MOTOR_LEADSCREW, currentDirection);
+
+        lastWakeTime = xTaskGetTickCount();
+
+        while (motionActive)
         {
-            /* TODO: Reverse motor direction */
-            leadscrewReverseRequested = 0;
-            currentState = LEADSCREW_DIRECTION_CHANGE;
+            /* Generate step pulse */
+            MotorHAL_GeneratePulse(MOTOR_LEADSCREW);
+
+            /* Acceleration */
+            if (!stopRequested &&
+                currentDelayUs > activeProfile.min_delay_us)
+            {
+                currentDelayUs -= activeProfile.accel_step_us;
+            }
+
+            /* Deceleration */
+            if (stopRequested)
+            {
+                currentDelayUs += activeProfile.accel_step_us;
+                if (currentDelayUs >= activeProfile.start_delay_us)
+                {
+                    motionActive = 0;
+                }
+            }
+
+            vTaskDelayUntil(&lastWakeTime,
+                             pdUS_TO_TICKS(currentDelayUs));
         }
 
-        if (leadscrewRunRequested)
-        {
-            /* TODO: Start leadscrew motion */
-            leadscrewRunRequested = 0;
-        }
+        MotorHAL_Stop(MOTOR_LEADSCREW);
 
-        if (leadscrewStopRequested)
-        {
-            /* TODO: Stop leadscrew motion */
-            leadscrewStopRequested = 0;
-        }
+        /* Signal completion */
+        xEventGroupSetBits(SystemEventGroup, EVT_LEADSCREW_DONE);
     }
 }
 
+
 /* API used by other tasks */
 
-void Leadscrew_RequestStart(void)
+void Leadscrew_RequestStart(motor_dir_t dir,
+                            const motion_profile_t *profile)
 {
-    leadscrewRunRequested = 1;
+    currentDirection = dir;
+    activeProfile = *profile;
+    currentDelayUs = activeProfile.start_delay_us;
+
+    motionActive = 1;
+    stopRequested = 0;
+
     xTaskNotifyGive(LeadscrewTaskHandle);
 }
 
 void Leadscrew_RequestStop(void)
 {
-    leadscrewStopRequested = 1;
-    xTaskNotifyGive(LeadscrewTaskHandle);
+    stopRequested = 1;
 }
 
 void Leadscrew_ReverseDirection(void)
