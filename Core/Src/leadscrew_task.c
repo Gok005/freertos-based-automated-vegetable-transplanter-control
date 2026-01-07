@@ -4,6 +4,8 @@
  */
 
 #include "leadscrew_task.h"
+#include "sequencer.h"
+
 
 /* RTOS objects */
 TaskHandle_t LeadscrewTaskHandle = NULL;
