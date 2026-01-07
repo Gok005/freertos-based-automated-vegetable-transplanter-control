@@ -4,6 +4,8 @@
  */
 
 #include "servo_task.h"
+#include "sequencer.h"
+
 
 /* RTOS objects */
 TaskHandle_t ServoTaskHandle = NULL;
