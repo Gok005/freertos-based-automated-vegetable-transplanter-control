@@ -12,6 +12,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "system_state.h"
+#include "motion_profile.h"
 
 /* Pickup task handle */
 extern TaskHandle_t PickupTaskHandle;
@@ -20,7 +21,12 @@ extern TaskHandle_t PickupTaskHandle;
 void PickupTask(void *argument);
 
 /* Control interface */
-void Pickup_RequestForward(void);
-void Pickup_RequestBackward(void);
+#include "motion_profile.h"
+
+/* Motion commands */
+void Pickup_RequestForward(const motion_profile_t *profile);
+void Pickup_RequestBackward(const motion_profile_t *profile);
+void Pickup_RequestStop(void);
+
 
 #endif /* PICKUP_TASK_H */
