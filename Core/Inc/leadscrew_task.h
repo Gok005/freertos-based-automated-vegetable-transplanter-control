@@ -12,6 +12,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "system_state.h"
+#include "motion_profile.h"
 
 /* Leadscrew task handle */
 extern TaskHandle_t LeadscrewTaskHandle;
@@ -19,9 +20,10 @@ extern TaskHandle_t LeadscrewTaskHandle;
 /* Leadscrew task entry function */
 void LeadscrewTask(void *argument);
 
-/* Control interface */
-void Leadscrew_RequestStart(void);
+
+/* Motion commands */
+void Leadscrew_RequestStart(motor_dir_t dir,
+                            const motion_profile_t *profile);
 void Leadscrew_RequestStop(void);
-void Leadscrew_ReverseDirection(void);
 
 #endif /* LEADSCREW_TASK_H */
