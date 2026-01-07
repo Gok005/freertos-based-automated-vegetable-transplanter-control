@@ -14,6 +14,16 @@
 TaskHandle_t SequencerTaskHandle = NULL;
 EventGroupHandle_t SystemEventGroup = NULL;
 
+Pickup_RequestForward(&pickupProfile);
+
+
+motion_profile_t pickupProfile = {
+    .start_delay_us = 2000,
+    .min_delay_us   = 500,
+    .accel_step_us  = 50
+};
+
+
 void SequencerTask(void *argument)
 {
     uint8_t cycleCount = 0;
